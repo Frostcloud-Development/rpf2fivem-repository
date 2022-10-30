@@ -132,6 +132,7 @@ data_file 'CARCOLS_FILE' 'data/carcols.meta'
 data_file 'VEHICLE_VARIATION_FILE' 'data/carvariations.meta'
 -- data_file 'VEHICLE_LAYOUTS_FILE' 'data/dlctext.meta'
 -- data_file 'VEHICLE_METADATA_FILE' 'data/contentunlocks.meta'
+      </value>
   </data>
   <metadata name="timer1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
