@@ -34,3 +34,9 @@ jobs:
       
     - name: Test
       run: dotnet test rpf2fivem.sln --no-build --verbosity normal
+
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+          name: build
+          path: bin/
