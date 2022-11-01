@@ -364,6 +364,7 @@ namespace rpf2fivem
                                                             p.StartInfo.FileName = @"./NConvert/nconvert.exe";
                                                             p.StartInfo.Arguments = $"-out dds -resize 50% 50% -overwrite ./NConvert/{texture.Value.Name}.dds";
                                                             p.StartInfo.UseShellExecute = false;
+                                                            p.StartInfo.CreateNoWindow = true;
                                                             p.StartInfo.RedirectStandardOutput = true;
                                                             p.Start();
 
