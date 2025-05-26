@@ -14,10 +14,13 @@ namespace rpf2fivem
         public string VehiclePrice { get; private set; } = string.Empty;
         public string VehicleCategory { get; private set; } = string.Empty;
         public string VehicleType { get; private set; } = string.Empty;
+        public string FileName { get; private set; } = string.Empty;
 
-        public HelperWindow()
+        public HelperWindow(string fileName)
         {
+            this.FileName = fileName;   
             InitializeComponent();
+            label2.Text = fileName;
             SetupEventHandlers();
         }
 
@@ -68,6 +71,11 @@ namespace rpf2fivem
 
             // Close the form to return to the main form  
             this.Close();
+        }
+
+        private void groupBox1_Enter(object sender, EventArgs e)
+        {
+
         }
     }
 }
