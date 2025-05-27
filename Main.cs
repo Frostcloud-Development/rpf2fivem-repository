@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CodeWalker.GameFiles;
@@ -1072,12 +1073,23 @@ namespace rpf2fivem
             var itemList = queueList.Items.Cast<string>().ToList();
             var lockObj = new object();
 
+            // Extract paths from itemList
+            var zipFiles = itemList
+                .Select(item => item.Split('>')[1].Trim()) // Get the part after ">"
+                .Select(path => new FileInfo(path))        // Convert to FileInfo
+                .ToList();
 
+            //Make sure we dont unzip everything at once, which will for one make the GC explode and for the other use a unknown ammount of ram.
+            //The class it self can also be easily editied to allow to set max ram consumption from the gui later.
             var evaluator = new UnzipSettingsEvaluator();
+                                                         
             evaluator.EvaluateSettings(zipFiles);
+            LogAppend("[Multithreading] Max concurrent unzips: " + evaluator.MaxConcurrentUnzips);
+            var semaphore = new SemaphoreSlim(evaluator.MaxConcurrentUnzips);
 
             var tasks = itemList.Select(CurrentItem => Task.Run(async () =>
             {
+                await semaphore.WaitAsync(); // Wait to enter
                 string guid = Guid.NewGuid().ToString();
                 var stopwatch = Stopwatch.StartNew();
 
@@ -1085,24 +1097,15 @@ namespace rpf2fivem
                 {
                     InvokeIfRequired(() => LogAppend($"[Worker] Setting up basic environment for: {guid}"));
                     SetupBasicEnviroment(guid);
-
-                    lock (lockObj)
-                    {
-                        InvokeIfRequired(() =>
-                        {
-                            QueueHandler(currentQueue, itemList.Count);
-                       
-                        });
-                    }
-
+                    QueueHandler(currentQueue, itemList.Count);
                     string SingleEnviromentFolder = regex.Match(CurrentItem).Groups[1].Value;
                     string StreamFolder = "";
                     string DataFolder = "";
 
-                    InvokeIfRequired(() => LogAppend("[Worker] Setting up resource folder structure..."));
+                    LogAppend("[Worker] Setting up resource folder structure...");
                     SetupStructureFolders(SingleEnviromentFolder, combinedFolderString, CombineResourceState, guid);
 
-                    InvokeIfRequired(() => LogAppend("[Worker] Fetching resource stream and data folders..."));
+                    LogAppend("[Worker] Fetching resource stream and data folders...");
                     var StructureFolders = CreateDataFolders(SingleEnviromentFolder, combinedFolderString, CombineResourceState, guid);
                     StreamFolder = StructureFolders.streamFolder;
                     DataFolder = StructureFolders.dataFolder;
@@ -1110,13 +1113,13 @@ namespace rpf2fivem
                     var CleanedItemName = CurrentItem.Replace($"<{SingleEnviromentFolder}>", "");
                     if (CurrentItem != "" && CleanedItemName.Contains("https://files.gta5-mods.com/") && !CleanedItemName.Contains("XXXCARNAMEXXXX"))
                     {
-                        InvokeIfRequired(() => LogAppend("[Worker] Downloading vehicle archive from GTA5-Mods..."));
+                        LogAppend("[Worker] Downloading vehicle archive from GTA5-Mods...");
                         await AsyncFileDownload(CleanedItemName);
                     }
                     else if (CurrentItem != "" && File.Exists(CleanedItemName))
                     {
-                        InvokeIfRequired(() => LogAppend("[Worker] Processing locally stored vehicle archive..."));
-                        string destinationPath = Path.Combine("cache",guid, Path.GetFileName(CleanedItemName));
+                        LogAppend("[Worker] Processing locally stored vehicle archive...");
+                        string destinationPath = Path.Combine("cache", guid, Path.GetFileName(CleanedItemName));
                         File.Copy(CleanedItemName, destinationPath, overwrite: true);
                     }
                     else
@@ -1124,15 +1127,15 @@ namespace rpf2fivem
                         lock (lockObj)
                         {
                             currentQueue++;
-                           // InvokeIfRequired(() => cleanUp(guid));
+                            // InvokeIfRequired(() => cleanUp(guid));
                         }
 
                         stopwatch.Stop();
                         InvokeIfRequired(() => jobTime.Text = $"| Last job took: {stopwatch.ElapsedMilliseconds} ms");
-                        InvokeIfRequired(() => WarningAppend($"[Worker] File {CleanedItemName} does not exist, skipping."));
+                        WarningAppend($"[Worker] File {CleanedItemName} does not exist, skipping.");
                         return;
                     }
-                   // MessageBox.Show(CleanedItemName);
+                    // MessageBox.Show(CleanedItemName);
 
                     //File.Copy(CleanedItemName, )
                     //InvokeIfRequired(() => LogAppend("[Worker] Moving archives to cache..."));
@@ -1140,63 +1143,61 @@ namespace rpf2fivem
                     //HideShellCmd($@"move *.zip ./cache/{guid}/");
                     //HideShellCmd($@"move *.7z ./cache/{guid}/");
 
-                    InvokeIfRequired(() => LogAppend("[SharpCompress] Decompressing..."));
+                     LogAppend("[SharpCompress] Decompressing...");
                     //await Task.Delay(500);
                     universalCacheUnpack(guid);
                     //await Task.Delay(2500);
 
-                    InvokeIfRequired(() => LogAppend("[Worker] Removing leftover files from the archive..."));
+                     LogAppend("[Worker] Removing leftover files from the archive...");
                     RemoveUnnessecary("yft", guid);
                     RemoveUnnessecary("ytd", guid);
                     RemoveUnnessecary("meta", guid);
 
-                    InvokeIfRequired(() => LogAppend("[CodeWalker] Searching for dlc.rpf..."));
+                    LogAppend("[CodeWalker] Searching for dlc.rpf...");
                     RpfUnpack(CleanedItemName, guid, SingleEnviromentFolder);
 
-                    InvokeIfRequired(() => LogAppend("[Worker] Moving items from cache to resource folder..."));
+                    LogAppend("[Worker] Moving items from cache to resource folder...");
                     //await Task.Delay(5000);
                     LogAppend("[Worker] Inflating and fixing resources for: " + guid);
                     InflateResourceFolder(StreamFolder, DataFolder, "meta", false, false, false, guid);
                     InflateResourceFolder(StreamFolder, DataFolder, "yft", false, true, false, guid);
                     InflateResourceFolder(StreamFolder, DataFolder, "ytd", true, false, false, guid);
 
+                    IncreaseProgressBar();
 
-                    InvokeIfRequired(() => { tsBar.Value++; });
-                    InvokeIfRequired(() =>
+                    if (tsBar.Value == itemList.Count)
                     {
-                        if (tsBar.Value == itemList.Count)
+                        LogAppend("[Worker] Moving Combiner Cache folder to /resources as all conversions are finished.");
+
+                        string sourcePath = Path.Combine("./combinercache", combinedFolderString);
+                        string targetPath = Path.Combine("./resources", combinedFolderString);
+
+                        // Move the folder from combiner cache to resources
+                        if (Directory.Exists(targetPath))
                         {
-                            LogAppend("[Worker] Moving Combiner Cache folder to /resources as all conversions are finished.");
-
-                            string sourcePath = Path.Combine("./combinercache", combinedFolderString);
-                            string targetPath = Path.Combine("./resources", combinedFolderString);
-
-                            // Move the folder from combiner cache to resources
-                            if (Directory.Exists(targetPath))
-                            {
-                                // Optionally handle existing target folder (throw, merge, or delete)
-                                LogAppend($"[Warning] Target folder already exists at {targetPath}. Deleting it before move.");
-                                Directory.Delete(targetPath, true);
-                            }
-
-                            Directory.Move(sourcePath, targetPath);
-
-                            // Delete the whole combinercache folder after moving the subfolder
-                            if (Directory.Exists("./combinercache"))
-                            {
-                                //Directory.Delete("./combinercache", true);
-                            }
+                            // Optionally handle existing target folder (throw, merge, or delete)
+                            LogAppend($"[Warning] Target folder already exists at {targetPath}. Deleting it before move.");
+                            Directory.Delete(targetPath, true);
                         }
-                        else
+
+                        Directory.Move(sourcePath, targetPath);
+
+                        // Delete the whole combinercache folder after moving the subfolder
+                        if (Directory.Exists("./combinercache"))
                         {
-                            LogAppend("[Worker] Copying resource folder to Combiner Cache.");
-
-                            string sourcePath = Path.Combine("./cache", guid, "structure", combinedFolderString);
-                            string targetPath = Path.Combine("./combinercache", combinedFolderString);
-
-                            CopyIfNotExists(new DirectoryInfo(sourcePath), new DirectoryInfo(targetPath));
+                            //Directory.Delete("./combinercache", true);
                         }
-                    });
+                    }
+                    else
+                    {
+                        LogAppend("[Worker] Copying resource folder to Combiner Cache.");
+
+                        string sourcePath = Path.Combine("./cache", guid, "structure", combinedFolderString);
+                        string targetPath = Path.Combine("./combinercache", combinedFolderString);
+
+                        CopyIfNotExists(new DirectoryInfo(sourcePath), new DirectoryInfo(targetPath));
+                    }
+
 
 
 
@@ -1204,17 +1205,22 @@ namespace rpf2fivem
                 catch (Exception ex)
                 {
                     SentrySdk.CaptureException(ex);
-                    InvokeIfRequired(() => ErrorAppend("[CodeWalker] Failed to extract dlc.rpf, stack trace: " + ex));
+                    ErrorAppend("[CodeWalker] Failed to extract dlc.rpf, stack trace: " + ex);
                 }
-
-                lock (lockObj)
+                finally
                 {
-                    currentQueue++;
-                    //InvokeIfRequired(() => cleanUp(guid));
+
+                    lock (lockObj)
+                    {
+                        currentQueue++;
+                        //InvokeIfRequired(() => cleanUp(guid));
+                    }
+
+                    stopwatch.Stop();
+                    InvokeIfRequired(() => jobTime.Text = $"| Last job took: {stopwatch.ElapsedMilliseconds} ms");
+                    semaphore.Release(); //Make sure to tell semaphore a thread got freed.
                 }
 
-                stopwatch.Stop();
-                InvokeIfRequired(() => jobTime.Text = $"| Last job took: {stopwatch.ElapsedMilliseconds} ms");
             }));
 
             await Task.WhenAll(tasks);
@@ -1229,11 +1235,19 @@ namespace rpf2fivem
                     InvokeHelperScripts(modelName, fold);
                 }
 
-                InvokeIfRequired(() => LogAppend($"[Worker] Conversion of vehicle {modelName} has finished"));
+                LogAppend($"[Worker] Conversion of vehicle {modelName} has finished");
             }
             
             InvokeIfRequired(() => jobTime.Text = $"| Finished");
 
+        }
+
+        private void IncreaseProgressBar()
+        {
+            InvokeIfRequired(() =>
+            {
+                tsBar.Value++;
+            });
         }
 
 

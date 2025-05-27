@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.SelectArchive = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
@@ -45,6 +46,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.log = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.LoadEncryptionData = new System.Windows.Forms.CheckBox();
             this.QbCoreHelper = new System.Windows.Forms.CheckBox();
             this.CompressCheck = new System.Windows.Forms.CheckBox();
@@ -59,7 +61,6 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.tsQueue = new System.Windows.Forms.ToolStripStatusLabel();
             this.tsBar = new System.Windows.Forms.ToolStripProgressBar();
-            this.SelectArchive = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -86,6 +87,16 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "RPF Selector";
             // 
+            // SelectArchive
+            // 
+            this.SelectArchive.Location = new System.Drawing.Point(325, 39);
+            this.SelectArchive.Name = "SelectArchive";
+            this.SelectArchive.Size = new System.Drawing.Size(126, 23);
+            this.SelectArchive.TabIndex = 23;
+            this.SelectArchive.Text = "Select archive/s";
+            this.SelectArchive.UseVisualStyleBackColor = true;
+            this.SelectArchive.Click += new System.EventHandler(this.SelectArchive_Click);
+            // 
             // button2
             // 
             this.button2.Location = new System.Drawing.Point(325, 68);
@@ -110,7 +121,7 @@
             // 
             this.textBox1.Location = new System.Drawing.Point(9, 40);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(336, 22);
+            this.textBox1.Size = new System.Drawing.Size(312, 22);
             this.textBox1.TabIndex = 20;
             this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
@@ -185,37 +196,45 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.log);
             this.groupBox2.Location = new System.Drawing.Point(476, 12);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(603, 456);
+            this.groupBox2.Size = new System.Drawing.Size(586, 456);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Log";
             // 
             // label2
             // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
             this.label2.Enabled = false;
-            this.label2.Location = new System.Drawing.Point(116, -3);
+            this.label2.Location = new System.Drawing.Point(104, 0);
             this.label2.Name = "label2";
             this.label2.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.label2.Size = new System.Drawing.Size(479, 16);
             this.label2.TabIndex = 14;
-            this.label2.Text = "build rpf2fivem@helper-scripts_4.3.1-patch5 | developed by: github.com/Avenze";
+            this.label2.Text = "build rpf2fivem@helper-scripts_4.3.1-patch6 | developed by: github.com/Avenze";
             // 
             // log
             // 
-            this.log.Location = new System.Drawing.Point(6, 17);
+            this.log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.log.Location = new System.Drawing.Point(6, 19);
             this.log.Multiline = true;
             this.log.Name = "log";
             this.log.ReadOnly = true;
-            this.log.Size = new System.Drawing.Size(591, 433);
+            this.log.Size = new System.Drawing.Size(574, 431);
             this.log.TabIndex = 0;
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.checkBox1);
             this.groupBox3.Controls.Add(this.LoadEncryptionData);
             this.groupBox3.Controls.Add(this.QbCoreHelper);
             this.groupBox3.Controls.Add(this.CompressCheck);
@@ -229,10 +248,21 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Resource";
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(12, 100);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(219, 20);
+            this.checkBox1.TabIndex = 22;
+            this.checkBox1.Text = "generate addon_spawner config";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged_2);
+            // 
             // LoadEncryptionData
             // 
             this.LoadEncryptionData.AutoSize = true;
-            this.LoadEncryptionData.Location = new System.Drawing.Point(12, 126);
+            this.LoadEncryptionData.Location = new System.Drawing.Point(12, 152);
             this.LoadEncryptionData.Name = "LoadEncryptionData";
             this.LoadEncryptionData.Size = new System.Drawing.Size(349, 20);
             this.LoadEncryptionData.TabIndex = 21;
@@ -245,16 +275,16 @@
             this.QbCoreHelper.AutoSize = true;
             this.QbCoreHelper.Location = new System.Drawing.Point(234, 74);
             this.QbCoreHelper.Name = "QbCoreHelper";
-            this.QbCoreHelper.Size = new System.Drawing.Size(179, 20);
+            this.QbCoreHelper.Size = new System.Drawing.Size(198, 20);
             this.QbCoreHelper.TabIndex = 20;
-            this.QbCoreHelper.Text = "qb-core vehicle list helper";
+            this.QbCoreHelper.Text = "generate qb_core vehicle list";
             this.QbCoreHelper.UseVisualStyleBackColor = true;
             this.QbCoreHelper.CheckedChanged += new System.EventHandler(this.QbCoreHelper_CheckedChanged);
             // 
             // CompressCheck
             // 
             this.CompressCheck.AutoSize = true;
-            this.CompressCheck.Location = new System.Drawing.Point(12, 100);
+            this.CompressCheck.Location = new System.Drawing.Point(12, 126);
             this.CompressCheck.Name = "CompressCheck";
             this.CompressCheck.Size = new System.Drawing.Size(325, 20);
             this.CompressCheck.TabIndex = 18;
@@ -267,9 +297,9 @@
             this.QbxCoreHelper.AutoSize = true;
             this.QbxCoreHelper.Location = new System.Drawing.Point(12, 74);
             this.QbxCoreHelper.Name = "QbxCoreHelper";
-            this.QbxCoreHelper.Size = new System.Drawing.Size(188, 20);
+            this.QbxCoreHelper.Size = new System.Drawing.Size(204, 20);
             this.QbxCoreHelper.TabIndex = 14;
-            this.QbxCoreHelper.Text = "qbx_core vehicle list helper";
+            this.QbxCoreHelper.Text = "generate qbx_core vehicle list";
             this.QbxCoreHelper.UseVisualStyleBackColor = true;
             this.QbxCoreHelper.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
@@ -292,6 +322,7 @@
             // 
             // btnStart
             // 
+            this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnStart.Enabled = false;
             this.btnStart.Location = new System.Drawing.Point(12, 437);
             this.btnStart.Name = "btnStart";
@@ -316,7 +347,7 @@
             this.tsBar});
             this.statusStrip1.Location = new System.Drawing.Point(0, 466);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1083, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1062, 22);
             this.statusStrip1.TabIndex = 14;
             this.statusStrip1.Text = "tsStatus";
             // 
@@ -336,7 +367,7 @@
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(725, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(704, 17);
             this.toolStripStatusLabel1.Spring = true;
             // 
             // tsQueue
@@ -350,33 +381,22 @@
             this.tsBar.Name = "tsBar";
             this.tsBar.Size = new System.Drawing.Size(100, 16);
             // 
-            // SelectArchive
-            // 
-            this.SelectArchive.Location = new System.Drawing.Point(351, 39);
-            this.SelectArchive.Name = "SelectArchive";
-            this.SelectArchive.Size = new System.Drawing.Size(100, 23);
-            this.SelectArchive.TabIndex = 23;
-            this.SelectArchive.Text = "Select archive";
-            this.SelectArchive.UseVisualStyleBackColor = true;
-            this.SelectArchive.Click += new System.EventHandler(this.SelectArchive_Click);
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(1083, 488);
+            this.ClientSize = new System.Drawing.Size(1062, 488);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Main";
-            this.Text = "rpf2fivem | 4.3.1-patch5 | github.com/Avenze/rpf2fivem-repository";
+            this.Text = "rpf2fivem | 4.3.1-patch6 | github.com/Avenze/rpf2fivem-repository";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -423,5 +443,6 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.CheckBox LoadEncryptionData;
         private System.Windows.Forms.Button SelectArchive;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }
