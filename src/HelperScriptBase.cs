@@ -85,11 +85,12 @@ namespace rpf2fivem.src
 
             var vehc = DataRegistry[internalRef];
             vehc.Model = baseName;
+            DataRegistry[internalRef] = vehc;
         }
 
         public static void RegisterVehicleData(string rpf, VehicleData data)
         {
-            
+            Console.WriteLine($"Registered: {rpf} : {data.Name}");
             DataRegistry.Add(rpf, data);
         }
 
