@@ -63,37 +63,53 @@ namespace rpf2fivem.src
                                 }
                             }
                         }
-                        else if (extensions["meta"].Any(ext => entry.NameLower.EndsWith(ext)))
+                        else if (entry is RpfBinaryFileEntry)
                         {
-                            RpfFileEntry rpfentry = entry as RpfFileEntry;
-                            byte[] fileData = rpfentry.File.ExtractFile(rpfentry);
-                            MVFS[entry.NameLower] = fileData;
-                        }
-                        else if (extensions["stream"].Any(ext => entry.NameLower.EndsWith(ext)))
-                        {
-                            RpfFileEntry rpfentry = entry as RpfFileEntry;
-                            byte[] fileData = rpfentry.File.ExtractFile(rpfentry);
-                            SVFS[entry.NameLower] = fileData;
-                            if (entry.NameLower.EndsWith(".ytd"))
-                            {
-                                if (!entry.NameLower.EndsWith("+hi", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    string baseName = entry.NameLower.Remove(entry.NameLower.Length - 4); // Remove .ytd extension
-                                    string yftPath = baseName + ".yft";
-                                    bool hasMatchingYft = SVFS.ContainsKey(yftPath);
+                            RpfBinaryFileEntry binentry = entry as RpfBinaryFileEntry;
+                            byte[] data = rpf.ExtractFileBinary(binentry, reader);
 
-                                    if (hasMatchingYft)
+                            if (extensions["meta"].Any(ext => entry.NameLower.EndsWith(ext)))
+                            {
+                                MVFS[entry.NameLower] = data;
+                            }
+                            else if (extensions["stream"].Any(ext => entry.NameLower.EndsWith(ext)))
+                            {
+                                SVFS[entry.NameLower] = data;
+                            }
+                        }
+
+                        else if (entry is RpfResourceFileEntry reSentry)
+                        {
+                            byte[] fileData = rpf.ExtractFileResource(reSentry, reader);
+                            fileData = ResourceBuilder.Compress(fileData); //not completely ideal to recompress it... for one it will be slow thats for sure we should just swap it at some point
+                            fileData = ResourceBuilder.AddResourceHeader(reSentry, fileData);
+
+                            if (extensions["meta"].Any(ext => entry.NameLower.EndsWith(ext)))
+                            {
+                                MVFS[entry.NameLower] = fileData;
+                            }
+                            else if (extensions["stream"].Any(ext => entry.NameLower.EndsWith(ext)))
+                            {
+                                SVFS[entry.NameLower] = fileData;
+                                if (entry.NameLower.EndsWith(".ytd"))
+                                {
+
+
+                                    if (!entry.NameLower.EndsWith("+hi", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        //LogAppend("[CodeWalker] Located streaming hash name with matching .yft file: " + baseName);
-                                        Console.WriteLine($"Found Model name for:{ArchivePath} : {baseName}");
-                                        HelperScriptRegistry.SetVehicleBaseName(ArchivePath, baseName); //TODO: i have a bad feeling right now, this will be prone to race conditions i feel like
+                                        string baseName = entry.NameLower.Remove(entry.NameLower.Length - 4); // Remove .ytd extension
+                                        string yftPath = baseName + ".yft";
+                                        bool hasMatchingYft = SVFS.ContainsKey(yftPath);
+
+                                        if (hasMatchingYft)
+                                        {
+                                            //LogAppend("[CodeWalker] Located streaming hash name with matching .yft file: " + baseName);
+                                            Console.WriteLine($"Found Model name for:{ArchivePath} : {baseName}");
+                                            HelperScriptRegistry.SetVehicleBaseName(ArchivePath, baseName); //TODO: i have a bad feeling right now, this will be prone to race conditions i feel like
+                                        }
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
-                            //Console.WriteLine(entry.NameLower);
                         }
 
                         /*
