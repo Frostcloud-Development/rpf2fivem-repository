@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using CodeWalker.GameFiles;
 using CodeWalker.Utils;
+using rpf2fivem.src;
 using Sentry;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -24,6 +25,7 @@ using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Header;
 
 namespace rpf2fivem
 {
@@ -112,7 +114,7 @@ namespace rpf2fivem
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            HelperScriptRegistry.Generators.Add(new AddonSpawnerConfigGenerator());
             // Validate if a log exists, if not, create one!
             if (!Directory.Exists(@"./logs"))
             {
@@ -301,32 +303,34 @@ namespace rpf2fivem
             process.Start();
         }
 
-      
+
 
         // SharpCompress Functions
         private void unZip(string archivePath, string extractionDirectory)
         {
             try
             {
-                // Directory.CreateDirectory wurde bereits in UnpackSpecificArchive aufgerufen
                 using (var archive = ZipArchive.Open(archivePath))
                 {
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] Entpacke ZIP-Archiv: {Path.GetFileName(archivePath)}"));
-                    foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+
+                    var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
+
+                    Parallel.ForEach(entries, entry =>
                     {
-                        entry.WriteToDirectory(extractionDirectory, new ExtractionOptions()
+                        entry.WriteToDirectory(extractionDirectory, new ExtractionOptions
                         {
                             ExtractFullPath = true,
-                            Overwrite = true // Vorsicht: Überschreibt vorhandene Dateien ohne Nachfrage
+                            Overwrite = true
                         });
-                    }
+                    });
+
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] ZIP-Archiv {Path.GetFileName(archivePath)} erfolgreich entpackt."));
                 }
             }
             catch (Exception ex)
             {
                 InvokeIfRequired(() => ErrorAppend($"[SharpCompress] Fehler beim Entpacken von ZIP-Archiv {Path.GetFileName(archivePath)}: {ex.Message}"));
-                // SentrySdk.CaptureException(ex);
             }
         }
 
@@ -334,53 +338,59 @@ namespace rpf2fivem
         {
             try
             {
-                // Directory.CreateDirectory wurde bereits in UnpackSpecificArchive aufgerufen
                 using (var archive = RarArchive.Open(archivePath))
                 {
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] Entpacke RAR-Archiv: {Path.GetFileName(archivePath)}"));
-                    foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+
+                    var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
+
+                    Parallel.ForEach(entries, entry =>
                     {
-                        entry.WriteToDirectory(extractionDirectory, new ExtractionOptions()
+                        entry.WriteToDirectory(extractionDirectory, new ExtractionOptions
                         {
                             ExtractFullPath = true,
                             Overwrite = true
                         });
-                    }
+                    });
+
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] RAR-Archiv {Path.GetFileName(archivePath)} erfolgreich entpackt."));
                 }
             }
             catch (Exception ex)
             {
                 InvokeIfRequired(() => ErrorAppend($"[SharpCompress] Fehler beim Entpacken von RAR-Archiv {Path.GetFileName(archivePath)}: {ex.Message}"));
-                // SentrySdk.CaptureException(ex);
             }
         }
+
 
         private void unSeven(string archivePath, string extractionDirectory)
         {
             try
             {
-                // Directory.CreateDirectory wurde bereits in UnpackSpecificArchive aufgerufen
                 using (var archive = SevenZipArchive.Open(archivePath))
                 {
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] Entpacke 7z-Archiv: {Path.GetFileName(archivePath)}"));
-                    foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+
+                    var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
+
+                    Parallel.ForEach(entries, entry =>
                     {
-                        entry.WriteToDirectory(extractionDirectory, new ExtractionOptions()
+                        entry.WriteToDirectory(extractionDirectory, new ExtractionOptions
                         {
                             ExtractFullPath = true,
                             Overwrite = true
                         });
-                    }
+                    });
+
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] 7z-Archiv {Path.GetFileName(archivePath)} erfolgreich entpackt."));
                 }
             }
             catch (Exception ex)
             {
                 InvokeIfRequired(() => ErrorAppend($"[SharpCompress] Fehler beim Entpacken von 7z-Archiv {Path.GetFileName(archivePath)}: {ex.Message}"));
-                // SentrySdk.CaptureException(ex);
             }
         }
+
 
 
         public void UnpackSpecificArchive(string archiveToUnpackPath, string specificUnpackDirectory)
@@ -733,17 +743,8 @@ namespace rpf2fivem
             if (QbxCoreHelperState || QbCoreHelperState || AddonCarSpawnerHelperState)
             {
                 var VehicleDataObject = InvokeHelperQuestionnaire(fileName);
-                vehicleArray.Add(new VehicleData
-                {
-                    InternalReference = fivemresname_tb.Text,
-                    Name = VehicleDataObject.Name,
-                    Brand = VehicleDataObject.Brand,
-                    Model = VehicleDataObject.Model,
-                    Price = VehicleDataObject.Price,
-                    Category = VehicleDataObject.Category,
-                    Type = VehicleDataObject.Type,
-                    Hash = VehicleDataObject.Hash
-                });
+
+                HelperScriptRegistry.RegisterVehicleData(fileName, VehicleDataObject);
             }
         }
 
@@ -880,30 +881,24 @@ namespace rpf2fivem
 
         private void InflateResourceFolder(string streamFolder, string dataFolder, string type, bool isYtd, bool isYtf, bool combined, string guid)
         {
-            //Assume user types .txt into textbox
             string fileExtension = "*." + type;
             string basePath = Path.GetFullPath(Path.Combine("cache", guid, "rpfunpack"));
-            string[] txtFiles = Directory.GetFiles(basePath, fileExtension, SearchOption.AllDirectories); // had to add a more specific directory here aswell, can't check the entire cache folder anymore :weary:
+            string[] txtFiles = Directory.GetFiles(basePath, fileExtension, SearchOption.AllDirectories);
 
-            foreach (var item in txtFiles)
+            Parallel.ForEach(txtFiles, item =>
             {
-                
-                if (isYtd)
+                if (isYtd || isYtf)
                 {
                     fixTextureFile(item);
-                    File.Move(item, Path.Combine(streamFolder, Path.GetFileName(item))); // put into stream folder inside resource name
-
-                }
-                else if (isYtf)
-                {
-                    fixTextureFile(item);
-                    File.Move(item, Path.Combine(streamFolder, Path.GetFileName(item))); // put into stream folder inside resource name
+                    string dest = Path.Combine(streamFolder, Path.GetFileName(item));
+                    File.Move(item, dest);
                 }
                 else
                 {
-                    File.Move(item, Path.Combine(dataFolder, Path.GetFileName(item)));
+                    string dest = Path.Combine(dataFolder, Path.GetFileName(item));
+                    File.Move(item, dest);
                 }
-            }
+            });
         }
 
         private void RemoveUnnessecary(string type, string guid)
@@ -1095,7 +1090,7 @@ namespace rpf2fivem
 
                 try
                 {
-                    InvokeIfRequired(() => LogAppend($"[Worker] Setting up basic environment for: {guid}"));
+                    LogAppend($"[Worker] Setting up basic environment for: {guid}");
                     SetupBasicEnviroment(guid);
                     QueueHandler(currentQueue, itemList.Count);
                     string SingleEnviromentFolder = regex.Match(CurrentItem).Groups[1].Value;
@@ -1124,29 +1119,17 @@ namespace rpf2fivem
                     }
                     else
                     {
-                        lock (lockObj)
-                        {
-                            currentQueue++;
-                            // InvokeIfRequired(() => cleanUp(guid));
-                        }
-
+                        currentQueue++;
+                        // InvokeIfRequired(() => cleanUp(guid));
+           
                         stopwatch.Stop();
                         InvokeIfRequired(() => jobTime.Text = $"| Last job took: {stopwatch.ElapsedMilliseconds} ms");
                         WarningAppend($"[Worker] File {CleanedItemName} does not exist, skipping.");
                         return;
                     }
-                    // MessageBox.Show(CleanedItemName);
 
-                    //File.Copy(CleanedItemName, )
-                    //InvokeIfRequired(() => LogAppend("[Worker] Moving archives to cache..."));
-                    //HideShellCmd($@"move *.rar ./cache/{guid}/");
-                    //HideShellCmd($@"move *.zip ./cache/{guid}/");
-                    //HideShellCmd($@"move *.7z ./cache/{guid}/");
-
-                     LogAppend("[SharpCompress] Decompressing...");
-                    //await Task.Delay(500);
+                    LogAppend("[SharpCompress] Decompressing...");
                     universalCacheUnpack(guid);
-                    //await Task.Delay(2500);
 
                      LogAppend("[Worker] Removing leftover files from the archive...");
                     RemoveUnnessecary("yft", guid);
@@ -1156,47 +1139,19 @@ namespace rpf2fivem
                     LogAppend("[CodeWalker] Searching for dlc.rpf...");
                     RpfUnpack(CleanedItemName, guid, SingleEnviromentFolder);
 
-                    LogAppend("[Worker] Moving items from cache to resource folder...");
-                    //await Task.Delay(5000);
                     LogAppend("[Worker] Inflating and fixing resources for: " + guid);
                     InflateResourceFolder(StreamFolder, DataFolder, "meta", false, false, false, guid);
                     InflateResourceFolder(StreamFolder, DataFolder, "yft", false, true, false, guid);
                     InflateResourceFolder(StreamFolder, DataFolder, "ytd", true, false, false, guid);
 
                     IncreaseProgressBar();
+                    
+                    LogAppend("[Worker] Copying resource folder to Combiner Cache.");
 
-                    if (tsBar.Value == itemList.Count)
-                    {
-                        LogAppend("[Worker] Moving Combiner Cache folder to /resources as all conversions are finished.");
+                    string sourcePath1 = Path.Combine("./cache", guid, "structure", combinedFolderString);
+                    string targetPath1 = Path.Combine("./combinercache", combinedFolderString);
 
-                        string sourcePath = Path.Combine("./combinercache", combinedFolderString);
-                        string targetPath = Path.Combine("./resources", combinedFolderString);
-
-                        // Move the folder from combiner cache to resources
-                        if (Directory.Exists(targetPath))
-                        {
-                            // Optionally handle existing target folder (throw, merge, or delete)
-                            LogAppend($"[Warning] Target folder already exists at {targetPath}. Deleting it before move.");
-                            Directory.Delete(targetPath, true);
-                        }
-
-                        Directory.Move(sourcePath, targetPath);
-
-                        // Delete the whole combinercache folder after moving the subfolder
-                        if (Directory.Exists("./combinercache"))
-                        {
-                            //Directory.Delete("./combinercache", true);
-                        }
-                    }
-                    else
-                    {
-                        LogAppend("[Worker] Copying resource folder to Combiner Cache.");
-
-                        string sourcePath = Path.Combine("./cache", guid, "structure", combinedFolderString);
-                        string targetPath = Path.Combine("./combinercache", combinedFolderString);
-
-                        CopyIfNotExists(new DirectoryInfo(sourcePath), new DirectoryInfo(targetPath));
-                    }
+                    CopyIfNotExists(new DirectoryInfo(sourcePath1), new DirectoryInfo(targetPath1));
 
 
 
@@ -1210,11 +1165,9 @@ namespace rpf2fivem
                 finally
                 {
 
-                    lock (lockObj)
-                    {
+                    
                         currentQueue++;
-                        //InvokeIfRequired(() => cleanUp(guid));
-                    }
+
 
                     stopwatch.Stop();
                     InvokeIfRequired(() => jobTime.Text = $"| Last job took: {stopwatch.ElapsedMilliseconds} ms");
@@ -1237,7 +1190,20 @@ namespace rpf2fivem
 
                 LogAppend($"[Worker] Conversion of vehicle {modelName} has finished");
             }
-            
+
+            string sourcePath = Path.Combine("./combinercache", combinedFolderString);
+            string targetPath = Path.Combine("./resources", combinedFolderString);
+
+            // Move the folder from combiner cache to resources
+            if (Directory.Exists(targetPath))
+            {
+                // Optionally handle existing target folder (throw, merge, or delete)
+                LogAppend($"[Warning] Target folder already exists at {targetPath}. Deleting it before move.");
+                Directory.Delete(targetPath, true);
+            }
+
+            Directory.Move(sourcePath, targetPath);
+
             InvokeIfRequired(() => jobTime.Text = $"| Finished");
 
         }
@@ -1259,20 +1225,24 @@ namespace rpf2fivem
                 target.Create();
             }
 
-            foreach (FileInfo file in source.GetFiles())
+            // Parallel copy files
+            var files = source.GetFiles();
+            Parallel.ForEach(files, file =>
             {
                 string targetFilePath = Path.Combine(target.FullName, file.Name);
                 if (!File.Exists(targetFilePath))
                 {
                     file.CopyTo(targetFilePath);
                 }
-            }
+            });
 
-            foreach (DirectoryInfo subDir in source.GetDirectories())
+            // Parallel copy subdirectories (recursively)
+            var subDirs = source.GetDirectories();
+            Parallel.ForEach(subDirs, subDir =>
             {
                 DirectoryInfo nextTargetSubDir = target.CreateSubdirectory(subDir.Name);
                 CopyIfNotExists(subDir, nextTargetSubDir);
-            }
+            });
         }
 
         private void InvokeIfRequired(Action action)
@@ -1321,7 +1291,34 @@ namespace rpf2fivem
 
         private async void btnStart_Click(object sender, EventArgs e)
         {
-            await startConversion(false, "", "");
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            var extractor = new RPFConverter<VehicleConverter>();
+            var cts = new CancellationTokenSource();
+
+            try
+            {
+                var archives = queueList.Items.Cast<string>().ToList()
+                   .Select(item => item.Split('>')[1].Trim()) // Get the part after ">"
+                   .ToList();
+
+                var data = await RPFArchiveExtractor.ExtractRPFsFromArchivesAsync(archives);
+                var (successCount, results) = await extractor.ConvertAsync(data, cts.Token);
+                Console.WriteLine($"Successfully processed {successCount} out of {results.Count}");
+                extractor.SaveToDisk("multithreadinggobrr");
+    
+                HelperScriptRegistry.Generate(Path.GetFullPath(Path.Combine("resources", "multithreadinggobrr")));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during processing: {ex.Message}");
+            }
+
+            cts.Dispose();
+            stopWatch.Stop();
+            Console.WriteLine($"Finished everything in: " + stopWatch.ElapsedMilliseconds);
+
+            // await startConversion(false, "", "");
         }
 
         private void btnAddQueue_Click(object sender, EventArgs e)
@@ -1554,7 +1551,7 @@ namespace rpf2fivem
                             var parts = line.Split('|');
                             if (parts.Length == 8)
                             {
-                                vehicleArray.Add(new VehicleData
+                                var vdata = new VehicleData
                                 {
                                     InternalReference = parts[0],
                                     Name = parts[1],
@@ -1564,7 +1561,9 @@ namespace rpf2fivem
                                     Category = parts[5],
                                     Type = parts[6],
                                     Hash = parts[7]
-                                });
+                                };
+
+                                HelperScriptRegistry.RegisterVehicleData(vdata.InternalReference, vdata);
                             }
                             else
                             {
@@ -1573,6 +1572,10 @@ namespace rpf2fivem
                         }
                     }
 
+                    foreach(var kvp in HelperScriptRegistry.DataRegistry)
+                    {
+                        Console.WriteLine(kvp.Key + " : " + kvp.Value.Model);
+                    }
                     LogAppend("[LoadState] Successfully loaded vehicleArray from SaveVehicleArray.dat.");
                 }
                 else
