@@ -26,11 +26,10 @@ namespace rpf2fivem.src
         private List<T> Extractors = new List<T>();
 
         //Should ideally also support the cancelation source since its likely called after convert, makes me think we should probably set it at class level somewhere 
-        public void SaveToDisk(string resourceName)
+        public void SaveToDisk(string finalPath)
         {
-            var finalPath = Path.GetFullPath(Path.Combine("./resources", resourceName));
             var streamRoot = Path.Combine(finalPath, "stream");
-            var metaRoot = Path.Combine(finalPath, "meta");
+            var metaRoot = Path.Combine(finalPath, "data"); //needs to be data lool
 
             if (Directory.Exists(finalPath))
                 Directory.Delete(finalPath, true);

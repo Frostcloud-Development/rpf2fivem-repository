@@ -29,6 +29,7 @@ namespace rpf2fivem.src
 
             foreach(var vehicle in HelperScriptRegistry.DataRegistry)
             {
+                Main.LogAppend("[AddonCarSpawnerGenerator]:Generating lua config for:" +  vehicle.Value.Model);
                 AddVehicleToGroupedLuaFile(finalPath, vehicle.Value, vehicle.Value.Model); //I feel like i implemented some of your logic wrong here.
             }
         }

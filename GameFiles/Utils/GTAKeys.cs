@@ -177,7 +177,7 @@ namespace CodeWalker.GameFiles
             }
         }
 
-        public static void LoadMagicData(string path = ".\\Keys")
+        public static void LoadMagicData(string path)
         {
             if (HasExtracted)
             {
@@ -210,7 +210,7 @@ namespace CodeWalker.GameFiles
             HasExtracted = true;
         }
 
-        public static void SaveToPath(string path = ".\\Keys")
+        public static void SaveToPath(string path)
         {
             File.WriteAllBytes(path + "\\gtav_aes_key.dat", PC_AES_KEY);
             CryptoIO.WriteNgKeys(path + "\\gtav_ng_key.dat", PC_NG_KEYS);

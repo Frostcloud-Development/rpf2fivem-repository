@@ -31,8 +31,10 @@ namespace rpf2fivem.src
         {
             ////Console.WriteLine(rpfdata.data.Length.ToString());
 
+            Main.LogAppend($"[Thread]:Converting:{Path.GetFileNameWithoutExtension(rpfdata.name)}");
             RpfFile rpf = new RpfFile(rpfdata.data, rpfdata.name, rpfdata.name);
             ExtractRPFData(rpf);
+            Main.LogAppend($"[Thread]:Finished Converting:{Path.GetFileNameWithoutExtension(rpfdata.name)}");
             return true;
         }
 
@@ -104,7 +106,7 @@ namespace rpf2fivem.src
                                         if (hasMatchingYft)
                                         {
                                             //LogAppend("[CodeWalker] Located streaming hash name with matching .yft file: " + baseName);
-                                            Console.WriteLine($"Found Model name for:{ArchivePath} : {baseName}");
+                                            //Main.LogAppend($"[Thread]:Found Model name for:{ArchivePath} : {baseName}");
                                             HelperScriptRegistry.SetVehicleBaseName(ArchivePath, baseName); //TODO: i have a bad feeling right now, this will be prone to race conditions i feel like
                                         }
                                     }

@@ -24,8 +24,6 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Header;
 
 namespace rpf2fivem
 {
@@ -34,6 +32,7 @@ namespace rpf2fivem
     {
 
         // GLOBALS
+        public static Main Instance = null;
 
         int currentQueue = 1;
         Random rnd = new Random();
@@ -48,6 +47,13 @@ namespace rpf2fivem
         bool QbCoreHelperState = false;
         bool QbxCoreHelperState = false;
         bool CombineResourceState = true;
+        bool isConverting = false; //should be handled somewhere inside RPFConverter class and only one instance of RPFConverter should exist. or multiple it doesnt really matter ig
+        CancellationTokenSource cts = null; //cancellationtoken for canceling conversion/breaking early in most multithreaded stuff
+
+        //need to use this since the installer will install into program(x86) which prevents access to ./logs when started as non admin.
+        static readonly string appDataBasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "rpf2fivem");
+        static readonly string logFolderPath = Path.Combine(appDataBasePath, "logs");
+        static readonly string keysFolderPath = Path.Combine(appDataBasePath, "keys");
 
 
         public struct VehicleData
@@ -83,7 +89,10 @@ namespace rpf2fivem
             //task.Wait(); // since Main can't be async in 7.3
 
             //LatestBuildName = task.Result;
-
+            if(Instance == null)
+            {
+                Instance = this;
+            }
             InitializeComponent();
         }
 
@@ -116,27 +125,16 @@ namespace rpf2fivem
         {
             HelperScriptRegistry.Generators.Add(new AddonSpawnerConfigGenerator());
             // Validate if a log exists, if not, create one!
-            if (!Directory.Exists(@"./logs"))
+            if (!Directory.Exists(logFolderPath))
             {
-                Directory.CreateDirectory(@"logs");
+                Directory.CreateDirectory(logFolderPath);
             }
-            if (!File.Exists(@"./logs/latest.log"))
+            if (!File.Exists(Path.Combine(logFolderPath, "latest.log")))
             {
-                FileStream fs = File.Create(@"./logs/latest.log");
-                fs.Close();
-            }
-
-            if (Directory.Exists("cache"))
-            {
-                Directory.Delete("cache", true);
-                Directory.CreateDirectory("cache");
+                File.Create(Path.Combine(logFolderPath, "latest.log"));
             }
 
-            if (Directory.Exists("combinercache"))
-            {
-                Directory.Delete("combinercache", true);
-                Directory.CreateDirectory("combinercache");
-            }
+     
 
 
 
@@ -169,7 +167,14 @@ namespace rpf2fivem
 
         // Helper Functions
 
-        public void LogAppend(string text)
+        //now we can do Main.LogAppend(text) anywhere
+        public static void LogAppend(string text)
+        {
+            if (Instance != null) Instance.LogAppendIns(text);
+        }
+
+        //ik this is dirty but i kind of dont care
+        public void LogAppendIns(string text)
         {
             if (log.InvokeRequired)
             {
@@ -208,12 +213,12 @@ namespace rpf2fivem
             if (log.InvokeRequired)
             {
                 log.Invoke(new Action(() => {
-                    log.AppendText("[Error] An error occurred during execution, stacktrace has been logged to /logs/latest.log, please submit to GitHub Issues page." + Environment.NewLine);
+                    log.AppendText($"[Error] An error occurred during execution, stacktrace has been logged to {logFolderPath}/latest.log, please submit to GitHub Issues page." + Environment.NewLine);
                 }));
             }
             else
             {
-                log.AppendText("[Error] An error occurred during execution, stacktrace has been logged to /logs/latest.log, please submit to GitHub Issues page." + Environment.NewLine);
+                log.AppendText($"[Error] An error occurred during execution, stacktrace has been logged to {logFolderPath}/latest.log, please submit to GitHub Issues page." + Environment.NewLine);
             }
 
             LogFile("[ERROR] " + text);
@@ -239,7 +244,7 @@ namespace rpf2fivem
                 {
                     mainForm.Invoke((MethodInvoker)delegate
                     {
-                        mainForm.log.AppendText("[ERROR] An error occoured during execution, stacktrace has been logged to /logs/latest.log, please submit to GitHub Issues page.");
+                        mainForm.log.AppendText($"[ERROR] An error occoured during execution, stacktrace has been logged to {logFolderPath}/latest.log, please submit to GitHub Issues page.");
                         mainForm.LogFile("[ERROR] " + text);
                     });
                 }
@@ -256,7 +261,7 @@ namespace rpf2fivem
 
                 lock (logFileLock)
                 {
-                    using (TextWriter tw = new StreamWriter(@"./logs/latest.log", append: true))
+                    using (TextWriter tw = new StreamWriter(Path.Combine(logFolderPath, "latest.log"), append: true))
                     {
                         tw.WriteLine("[" + currentDate + "] " + text + Environment.NewLine);
                         tw.Close();
@@ -535,6 +540,7 @@ namespace rpf2fivem
                         else if (entry is RpfResourceFileEntry)
                         {
                             RpfResourceFileEntry reSentry = entry as RpfResourceFileEntry;
+                            if (reSentry == null) return;
                             byte[] data = rpf.ExtractFileResource(reSentry, br);
                             data = ResourceBuilder.Compress(data); //not completely ideal to recompress it... for one it will be slow thats for sure we should just swap it at some point
                             data = ResourceBuilder.AddResourceHeader(reSentry, data);
@@ -1289,34 +1295,78 @@ namespace rpf2fivem
             btnStart.Enabled = false;
         }
 
+        
+
         private async void btnStart_Click(object sender, EventArgs e)
         {
+            if (isConverting)
+            {
+                if (MessageBox.Show("Do you really want to cancel the conversion?", "rpf2fivem", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) return;
+
+                if (cts.Token.CanBeCanceled)
+                {
+                    
+                    cts.Cancel();
+                    cts.Dispose();
+                    LogAppend("[Converters]:User aborted conversion!");
+                }
+                btnStart.Text = "Start Conversion Process";
+                isConverting = false;
+                return;
+            }
+            isConverting = true;
+            btnStart.Text = "Cancel conversion";
             var stopWatch = new Stopwatch();
             stopWatch.Start();
             var extractor = new RPFConverter<VehicleConverter>();
-            var cts = new CancellationTokenSource();
+            cts = new CancellationTokenSource();
 
+            
             try
             {
+                string selectedPath = "";
+
+                using (var dialog = new FolderBrowserDialog())
+                {
+                    dialog.Description = "Select a export folder";
+                    dialog.ShowNewFolderButton = true;
+
+                    if (dialog.ShowDialog() == DialogResult.OK)
+                    {
+                        selectedPath = dialog.SelectedPath;
+                       // MessageBox.Show("Selected folder: " + selectedPath);
+                    }
+                }
+
+
                 var archives = queueList.Items.Cast<string>().ToList()
                    .Select(item => item.Split('>')[1].Trim()) // Get the part after ">"
                    .ToList();
 
-                var data = await RPFArchiveExtractor.ExtractRPFsFromArchivesAsync(archives);
+                LogAppend($"[Uncompress]:Starting to uncompress {archives.Count} archives..");
+                var data = await RPFArchiveExtractor.ExtractRPFsFromArchivesAsync(archives, cts.Token);
                 var (successCount, results) = await extractor.ConvertAsync(data, cts.Token);
-                Console.WriteLine($"Successfully processed {successCount} out of {results.Count}");
-                extractor.SaveToDisk("multithreadinggobrr");
-    
-                HelperScriptRegistry.Generate(Path.GetFullPath(Path.Combine("resources", "multithreadinggobrr")));
+
+                if (!cts.IsCancellationRequested)
+                {
+                    LogAppend($"[Dispatch]:Successfully processed {successCount} out of {results.Count} vehicles, generating configs now..");
+                    HelperScriptRegistry.Generate(selectedPath);
+                    LogAppend($"[HelperScripts]:Generated all scripts and configs successfully, saving converted data to disk now..");
+                    extractor.SaveToDisk(selectedPath);
+                    LogAppend($"[Converters]:Saved to disk successfully!");
+                    cts.Dispose();
+                    stopWatch.Stop();
+                    LogAppend($"[Dispatch]:Finished converting in " + stopWatch.ElapsedMilliseconds + "ms");
+                    btnStart.Text = "Start Conversion Process";
+                }
+
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error during processing: {ex.Message}");
+                Console.WriteLine($"Error during processing: {ex}");
             }
 
-            cts.Dispose();
-            stopWatch.Stop();
-            Console.WriteLine($"Finished everything in: " + stopWatch.ElapsedMilliseconds);
+
 
             // await startConversion(false, "", "");
         }
@@ -1609,16 +1659,22 @@ namespace rpf2fivem
             if (!LoadEncryptionData.Checked) { return; }
 
             // Check if the "Keys" directory exists in the current directory
-            if (Directory.Exists("Keys"))
+            if (Directory.Exists(keysFolderPath))
             {
                 LogAppend("[KeyExtraction] Saved magic data was found, loading into CodeWalker key structure.");
-                GTA5Keys.LoadMagicData();
+                GTA5Keys.LoadMagicData(keysFolderPath);
                 LoadEncryptionData.Enabled = false;
             }
 
             // If the directory doesn't exist, prompt the user to select the GTA5.exe directory
             else
             {
+                if (!Directory.Exists(keysFolderPath))
+                {
+                    Directory.CreateDirectory(keysFolderPath);
+                }
+
+
                 using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
                 {
                     folderDialog.Description = "Select Directory with GTA5.exe";
@@ -1642,7 +1698,7 @@ namespace rpf2fivem
                                     Directory.CreateDirectory("Keys");
                                 }
 
-                                GTA5Keys.SaveToPath();
+                                GTA5Keys.SaveToPath(keysFolderPath);
 
                                 LogAppend("[KeyExtraction] Successfully generated and saved magic data files.");
 
@@ -1666,6 +1722,11 @@ namespace rpf2fivem
         {
             LogAppend("[Setup]:AddonCarSpawner Config generation: " + checkBox1.Checked);
             AddonCarSpawnerHelperState = checkBox1.Checked;
+        }
+
+        private void fivemresname_tb_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 

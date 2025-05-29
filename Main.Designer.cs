@@ -229,6 +229,7 @@
             this.log.Multiline = true;
             this.log.Name = "log";
             this.log.ReadOnly = true;
+            this.log.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.log.Size = new System.Drawing.Size(574, 431);
             this.log.TabIndex = 0;
             // 
@@ -310,6 +311,7 @@
             this.fivemresname_tb.Size = new System.Drawing.Size(442, 22);
             this.fivemresname_tb.TabIndex = 13;
             this.fivemresname_tb.Text = "default";
+            this.fivemresname_tb.TextChanged += new System.EventHandler(this.fivemresname_tb_TextChanged);
             // 
             // label4
             // 
@@ -324,7 +326,7 @@
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnStart.Enabled = false;
-            this.btnStart.Location = new System.Drawing.Point(12, 437);
+            this.btnStart.Location = new System.Drawing.Point(270, 436);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(200, 23);
             this.btnStart.TabIndex = 3;
@@ -367,7 +369,7 @@
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(704, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(673, 17);
             this.toolStripStatusLabel1.Spring = true;
             // 
             // tsQueue
