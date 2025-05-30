@@ -22,8 +22,8 @@ namespace rpf2fivem.src
         public string RPFBasePath { get; set; }
         public string ArchivePath { get; set; }
 
-        public Dictionary<string, byte[]> MVFS = new Dictionary<string, byte[]>(); //""vfs"" to simulate the folder structure inside memory, ik lol
-        public Dictionary<string, byte[]> SVFS = new Dictionary<string, byte[]>(); //""vfs"" to simulate the folder structure inside memory, ik lol
+        public ConcurrentDictionary<string, byte[]> MVFS = new ConcurrentDictionary<string, byte[]>(); //""vfs"" to simulate the folder structure inside memory, ik lol
+        public ConcurrentDictionary<string, byte[]> SVFS = new ConcurrentDictionary<string, byte[]>(); //""vfs"" to simulate the folder structure inside memory, ik lol
 
 
         public bool IsFinished = false;

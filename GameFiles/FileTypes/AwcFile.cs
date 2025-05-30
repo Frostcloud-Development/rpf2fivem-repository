@@ -1900,11 +1900,11 @@ namespace CodeWalker.GameFiles
 
             var data = Data;
 
-            RpfResourceFileEntry resentry = new RpfResourceFileEntry();
+            RpfResourceFileEntry reSentry = new RpfResourceFileEntry();
             uint rsc7 = BitConverter.ToUInt32(data, 0);
             int version = BitConverter.ToInt32(data, 4);
-            resentry.SystemFlags = BitConverter.ToUInt32(data, 8);
-            resentry.GraphicsFlags = BitConverter.ToUInt32(data, 12);
+            reSentry.SystemFlags = BitConverter.ToUInt32(data, 8);
+            reSentry.GraphicsFlags = BitConverter.ToUInt32(data, 12);
 
             if (rsc7 != 0x37435352)
             { } //testing..
@@ -1912,12 +1912,12 @@ namespace CodeWalker.GameFiles
             { }
 
             int newlen = data.Length - 16; //trim the header from the data passed to the next step.
-            int arrlen = Math.Max(newlen, resentry.SystemSize + resentry.GraphicsSize);//expand it as necessary for the reader.
+            int arrlen = Math.Max(newlen, reSentry.SystemSize + reSentry.GraphicsSize);//expand it as necessary for the reader.
             byte[] newdata = new byte[arrlen];
             Buffer.BlockCopy(data, 16, newdata, 0, newlen);
             data = newdata;
 
-            ResourceDataReader rd = new ResourceDataReader(resentry, data);
+            ResourceDataReader rd = new ResourceDataReader(reSentry, data);
 
             ClipDict = rd.ReadBlock<ClipDictionary>();
 

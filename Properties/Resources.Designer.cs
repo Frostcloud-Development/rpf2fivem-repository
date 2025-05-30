@@ -125,18 +125,18 @@ namespace rpf2fivem.Properties {
         /// <summary>
         ///   Looks up a localized string similar to production.
         /// </summary>
-        internal static string sentry_enviroment {
+        internal static string Sentry_enviroment {
             get {
-                return ResourceManager.GetString("sentry_enviroment", resourceCulture);
+                return ResourceManager.GetString("Sentry_enviroment", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to helper-scripts@4.3.1-patch5.
         /// </summary>
-        internal static string sentry_version {
+        internal static string Sentry_version {
             get {
-                return ResourceManager.GetString("sentry_version", resourceCulture);
+                return ResourceManager.GetString("Sentry_version", resourceCulture);
             }
         }
     }

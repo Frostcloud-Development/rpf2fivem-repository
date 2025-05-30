@@ -37,10 +37,11 @@
             this.InputVehiclePrice = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.InputVehicleCategory = new System.Windows.Forms.TextBox();
+            this.FinishButton = new System.Windows.Forms.Button();
             this.InputVehicleType = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
-            this.FinishButton = new System.Windows.Forms.Button();
+            this.InputVehicleCategory = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -115,6 +116,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.FinishButton);
             this.groupBox1.Controls.Add(this.InputVehicleType);
             this.groupBox1.Controls.Add(this.label7);
@@ -129,18 +131,21 @@
             this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(458, 346);
+            this.groupBox1.Size = new System.Drawing.Size(458, 360);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Configuration Helper";
+            this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
             // 
-            // InputVehicleCategory
+            // FinishButton
             // 
-            this.InputVehicleCategory.Location = new System.Drawing.Point(10, 203);
-            this.InputVehicleCategory.Name = "InputVehicleCategory";
-            this.InputVehicleCategory.Size = new System.Drawing.Size(442, 20);
-            this.InputVehicleCategory.TabIndex = 24;
-            this.InputVehicleCategory.Text = "default";
+            this.FinishButton.Enabled = false;
+            this.FinishButton.Location = new System.Drawing.Point(10, 328);
+            this.FinishButton.Name = "FinishButton";
+            this.FinishButton.Size = new System.Drawing.Size(85, 26);
+            this.FinishButton.TabIndex = 27;
+            this.FinishButton.Text = "Finished";
+            this.FinishButton.UseVisualStyleBackColor = true;
             // 
             // InputVehicleType
             // 
@@ -159,21 +164,28 @@
             this.label7.TabIndex = 25;
             this.label7.Text = "Vehicle Type (automobile, bike etc)";
             // 
-            // FinishButton
+            // InputVehicleCategory
             // 
-            this.FinishButton.Enabled = false;
-            this.FinishButton.Location = new System.Drawing.Point(12, 306);
-            this.FinishButton.Name = "FinishButton";
-            this.FinishButton.Size = new System.Drawing.Size(85, 26);
-            this.FinishButton.TabIndex = 27;
-            this.FinishButton.Text = "Finished";
-            this.FinishButton.UseVisualStyleBackColor = true;
+            this.InputVehicleCategory.Location = new System.Drawing.Point(10, 203);
+            this.InputVehicleCategory.Name = "InputVehicleCategory";
+            this.InputVehicleCategory.Size = new System.Drawing.Size(442, 20);
+            this.InputVehicleCategory.TabIndex = 24;
+            this.InputVehicleCategory.Text = "default";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(9, 295);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(35, 13);
+            this.label2.TabIndex = 28;
+            this.label2.Text = "label2";
             // 
             // HelperWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(485, 367);
+            this.ClientSize = new System.Drawing.Size(485, 384);
             this.Controls.Add(this.groupBox1);
             this.Name = "HelperWindow";
             this.Text = "Configuration Helper";
@@ -198,5 +210,6 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox InputVehicleCategory;
         private System.Windows.Forms.Button FinishButton;
+        private System.Windows.Forms.Label label2;
     }
 }

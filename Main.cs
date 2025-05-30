@@ -320,8 +320,8 @@ namespace rpf2fivem
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] Entpacke ZIP-Archiv: {Path.GetFileName(archivePath)}"));
 
                     var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
-
-                    Parallel.ForEach(entries, entry =>
+                    var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+                    Parallel.ForEach(entries, options, entry =>
                     {
                         entry.WriteToDirectory(extractionDirectory, new ExtractionOptions
                         {
@@ -348,8 +348,8 @@ namespace rpf2fivem
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] Entpacke RAR-Archiv: {Path.GetFileName(archivePath)}"));
 
                     var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
-
-                    Parallel.ForEach(entries, entry =>
+                    var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+                    Parallel.ForEach(entries,options, entry =>
                     {
                         entry.WriteToDirectory(extractionDirectory, new ExtractionOptions
                         {
@@ -377,8 +377,8 @@ namespace rpf2fivem
                     InvokeIfRequired(() => LogAppend($"[SharpCompress] Entpacke 7z-Archiv: {Path.GetFileName(archivePath)}"));
 
                     var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
-
-                    Parallel.ForEach(entries, entry =>
+                    var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+                    Parallel.ForEach(entries,options, entry =>
                     {
                         entry.WriteToDirectory(extractionDirectory, new ExtractionOptions
                         {
@@ -890,8 +890,8 @@ namespace rpf2fivem
             string fileExtension = "*." + type;
             string basePath = Path.GetFullPath(Path.Combine("cache", guid, "rpfunpack"));
             string[] txtFiles = Directory.GetFiles(basePath, fileExtension, SearchOption.AllDirectories);
-
-            Parallel.ForEach(txtFiles, item =>
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            Parallel.ForEach(txtFiles, options,item =>
             {
                 if (isYtd || isYtf)
                 {
@@ -1233,7 +1233,8 @@ namespace rpf2fivem
 
             // Parallel copy files
             var files = source.GetFiles();
-            Parallel.ForEach(files, file =>
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            Parallel.ForEach(files,options, file =>
             {
                 string targetFilePath = Path.Combine(target.FullName, file.Name);
                 if (!File.Exists(targetFilePath))
@@ -1244,7 +1245,7 @@ namespace rpf2fivem
 
             // Parallel copy subdirectories (recursively)
             var subDirs = source.GetDirectories();
-            Parallel.ForEach(subDirs, subDir =>
+            Parallel.ForEach(subDirs, options, subDir =>
             {
                 DirectoryInfo nextTargetSubDir = target.CreateSubdirectory(subDir.Name);
                 CopyIfNotExists(subDir, nextTargetSubDir);

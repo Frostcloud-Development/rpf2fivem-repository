@@ -42,8 +42,8 @@ namespace rpf2fivem.src
                 Console.WriteLine("Converters are still running!");
                 return;
             }
-
-            Parallel.ForEach(Extractors, extractor =>
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            Parallel.ForEach(Extractors, options, extractor =>
             {
                 string uniqueID = Path.GetRandomFileName().Replace(".", "").Substring(0, 8);
                 string extractorStreamPath = Path.Combine(streamRoot, uniqueID);
@@ -55,13 +55,13 @@ namespace rpf2fivem.src
                 var streamFileNames = new ConcurrentDictionary<string, int>();
                 var metaFileNames = new ConcurrentDictionary<string, int>();
 
-                Parallel.ForEach(extractor.SVFS, streamFile =>
+                Parallel.ForEach(extractor.SVFS, options, streamFile =>
                 {
                     string uniqueName = GetUniqueFileName(streamFile.Key, streamFileNames);
                     WriteFileFast(Path.Combine(extractorStreamPath, uniqueName), streamFile.Value);
                 });
 
-                Parallel.ForEach(extractor.MVFS, metaFile =>
+                Parallel.ForEach(extractor.MVFS, options, metaFile =>
                 {
                     string uniqueName = GetUniqueFileName(metaFile.Key, metaFileNames);
                     WriteFileFast(Path.Combine(extractorMetaPath, uniqueName), metaFile.Value);
@@ -76,7 +76,7 @@ namespace rpf2fivem.src
 
         public void WriteFileFast(string path, byte[] data)
         {
-            const int BufferSize = 1048576; // 1 MB buffer for copying data chunks
+            const int BufferSize = 1 << 20; // 1MB
 
             var fs = new FileStream(
                 path,
@@ -84,12 +84,12 @@ namespace rpf2fivem.src
                 FileAccess.Write,
                 FileShare.None,
                 BufferSize,
-                FileOptions.SequentialScan); // or FileOptions.WriteThrough for disk-level flush
+                FileOptions.SequentialScan);
 
-
-            fs.Write(data, 0, data.Length);
+            fs.WriteAsync(data, 0, data.Length);
             fs.Dispose();
         }
+
 
         private string GetUniqueFileName(string fileName, ConcurrentDictionary<string, int> nameTracker)
         {

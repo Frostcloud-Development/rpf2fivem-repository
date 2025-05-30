@@ -37,13 +37,13 @@ namespace CodeWalker.GameFiles
             RpfFileEntry = entry;
 
 
-            RpfResourceFileEntry resentry = entry as RpfResourceFileEntry;
-            if (resentry == null)
+            RpfResourceFileEntry reSentry = entry as RpfResourceFileEntry;
+            if (reSentry == null)
             {
                 throw new Exception("File entry wasn't a resource! (is it binary data?)");
             }
 
-            ResourceDataReader rd = new ResourceDataReader(resentry, data);
+            ResourceDataReader rd = new ResourceDataReader(reSentry, data);
 
             DrawableDict = rd.ReadBlock<DrawableDictionary>();
 

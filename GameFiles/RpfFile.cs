@@ -611,6 +611,8 @@ namespace CodeWalker.GameFiles
                 return null;
             }
         }
+
+  
         public byte[] ExtractFileBinary(RpfBinaryFileEntry entry, BinaryReader br)
         {
             if(entry == null)
@@ -664,6 +666,10 @@ namespace CodeWalker.GameFiles
 
             return null;
         }
+      
+
+    
+    
         public byte[] ExtractFileResource(RpfResourceFileEntry entry, BinaryReader br)
         {
             br.BaseStream.Position = StartPos + ((long)entry.FileOffset * 512);
@@ -722,6 +728,9 @@ namespace CodeWalker.GameFiles
 
             return null;
         }
+    
+
+
 
         public static T GetFile<T>(RpfEntry e) where T : class, PackedFile, new()
         {

@@ -3286,7 +3286,7 @@ namespace CodeWalker.GameFiles
         public uint Unknown_6Ch { get; set; } // 0x00000000
 
         // reference data
-        public ResourceSimpleArray<ClipAnimationsEntry> Animations { get; set; }
+        public ResourceSimpleArray<ClipAnimationSentry> Animations { get; set; }
 
 
         public ClipAnimationList()
@@ -3306,7 +3306,7 @@ namespace CodeWalker.GameFiles
             this.Unknown_68h = reader.ReadUInt32();
             this.Unknown_6Ch = reader.ReadUInt32();
 
-            this.Animations = reader.ReadBlockAt<ResourceSimpleArray<ClipAnimationsEntry>>(
+            this.Animations = reader.ReadBlockAt<ResourceSimpleArray<ClipAnimationSentry>>(
                 this.AnimationsPointer, // offset
                 this.AnimationsCount1
             );
@@ -3360,13 +3360,13 @@ namespace CodeWalker.GameFiles
             base.ReadXml(node);
             Duration = Xml.GetChildFloatAttribute(node, "Duration", "value");
 
-            Animations = new ResourceSimpleArray<ClipAnimationsEntry>();
-            Animations.Data = new List<ClipAnimationsEntry>();
-            var anims = XmlMeta.ReadItemArrayNullable<ClipAnimationsEntry>(node, "Animations");
+            Animations = new ResourceSimpleArray<ClipAnimationSentry>();
+            Animations.Data = new List<ClipAnimationSentry>();
+            var anims = XmlMeta.ReadItemArrayNullable<ClipAnimationSentry>(node, "Animations");
             if (anims != null) Animations.Data.AddRange(anims);
         }
     }
-    [TypeConverter(typeof(ExpandableObjectConverter))] public class ClipAnimationsEntry : ResourceSystemBlock, IMetaXmlItem
+    [TypeConverter(typeof(ExpandableObjectConverter))] public class ClipAnimationSentry : ResourceSystemBlock, IMetaXmlItem
     {
         public override long BlockLength
         {

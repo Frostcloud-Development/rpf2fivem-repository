@@ -12681,7 +12681,7 @@ namespace CodeWalker.GameFiles
         CVehicleLayoutInfo = 3264072483,
         CVehicleLayoutInfo__eLayoutFlags = 1206674129,
         CVehicleLayoutInfo__sCellphoneClipsets = 2814163180,
-        CVehicleLayoutInfo__sEntryPoint = 2049503406,
+        CVehicleLayoutInfo__SentryPoint = 2049503406,
         CVehicleLayoutInfo__sSeat = 1275391043,
         CVehicleMetadataMgr = 4258649703,
         CVehicleModVisible__eVehicleModBone = 3635907608,

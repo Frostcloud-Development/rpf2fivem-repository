@@ -453,7 +453,30 @@ namespace CodeWalker.GameFiles
             return newdata;
         }
 
+        public static byte[] Compress(byte[] data)
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var ds = new DeflateStream(ms, CompressionMode.Compress, leaveOpen: true))
+                {
+                    ds.Write(data, 0, data.Length);
+                }
+                // .ToArray() avoids the GetBuffer + copy overhead
+                return ms.ToArray();
+            }
+        }
+        public static byte[] Decompress(byte[] data)
+        {
+            using (var input = new MemoryStream(data))
+            using (var ds = new DeflateStream(input, CompressionMode.Decompress))
+            using (var output = new MemoryStream())
+            {
+                ds.CopyTo(output);
+                return output.ToArray(); // avoids GetBuffer + manual copy
+            }
+        }
 
+        /*
         public static byte[] Compress(byte[] data)
         {
             using (MemoryStream ms = new MemoryStream())
@@ -480,6 +503,7 @@ namespace CodeWalker.GameFiles
                 return outbuf;
             }
         }
+        */
 
     }
 }

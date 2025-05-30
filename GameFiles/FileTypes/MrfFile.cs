@@ -1136,7 +1136,7 @@ namespace CodeWalker.GameFiles
         public int InitialNodeOffset { get; set; } // offset from the start of this field
         public int InitialNodeFileOffset { get; set; }
         public uint StateUnk3 { get; set; }
-        public bool HasEntryParameter { get; set; }
+        public bool HaSentryParameter { get; set; }
         public bool HasExitParameter { get; set; }
         public byte StateChildCount { get; set; } // for Node(Inlined)StateMachine the number of states, for NodeState the number of children excluding NodeTails
         public byte TransitionCount { get; set; }
@@ -1156,7 +1156,7 @@ namespace CodeWalker.GameFiles
             InitialNodeOffset = r.ReadInt32();
             InitialNodeFileOffset = (int)(r.Position + InitialNodeOffset - 4);
             StateUnk3 = r.ReadUInt32();
-            HasEntryParameter = r.ReadByte() != 0;
+            HaSentryParameter = r.ReadByte() != 0;
             HasExitParameter = r.ReadByte() != 0;
             StateChildCount = r.ReadByte();
             TransitionCount = r.ReadByte();
@@ -1171,7 +1171,7 @@ namespace CodeWalker.GameFiles
             base.Write(w);
             w.Write(InitialNodeOffset);
             w.Write(StateUnk3);
-            w.Write((byte)(HasEntryParameter ? 1 : 0));
+            w.Write((byte)(HaSentryParameter ? 1 : 0));
             w.Write((byte)(HasExitParameter ? 1 : 0));
             w.Write(StateChildCount);
             w.Write(TransitionCount);
@@ -1186,7 +1186,7 @@ namespace CodeWalker.GameFiles
             StateUnk3 = Xml.GetChildUIntAttribute(node, "StateUnk3");
             EntryParameterName = XmlMeta.GetHash(Xml.GetChildInnerText(node, "EntryParameterName"));
             ExitParameterName = XmlMeta.GetHash(Xml.GetChildInnerText(node, "ExitParameterName"));
-            HasEntryParameter = EntryParameterName != 0;
+            HaSentryParameter = EntryParameterName != 0;
             HasExitParameter = ExitParameterName != 0;
         }
 
@@ -1194,7 +1194,7 @@ namespace CodeWalker.GameFiles
         {
             base.WriteXml(sb, indent);
             MrfXml.ValueTag(sb, indent, "StateUnk3", StateUnk3.ToString());
-            MrfXml.StringTag(sb, indent, "EntryParameterName", HasEntryParameter ? MrfXml.HashString(EntryParameterName) : null);
+            MrfXml.StringTag(sb, indent, "EntryParameterName", HaSentryParameter ? MrfXml.HashString(EntryParameterName) : null);
             MrfXml.StringTag(sb, indent, "ExitParameterName", HasExitParameter ? MrfXml.HashString(ExitParameterName) : null);
         }
 
@@ -1328,7 +1328,7 @@ namespace CodeWalker.GameFiles
                 + " - CC:" + StateChildCount.ToString()
                 + " - TC:" + TransitionCount.ToString()
                 + " - " + StateUnk3.ToString()
-                + " - OnEntry(" + HasEntryParameter.ToString() + "):" + EntryParameterName.ToString()
+                + " - OnEntry(" + HaSentryParameter.ToString() + "):" + EntryParameterName.ToString()
                 + " - OnExit(" + HasExitParameter.ToString() + "):" + ExitParameterName.ToString()
                 + " - TO:" + TransitionsOffset.ToString();
         }

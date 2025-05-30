@@ -30,8 +30,8 @@ namespace CodeWalker.GameFiles
             //Hash = entry.ShortNameHash;
 
 
-            RpfResourceFileEntry resentry = entry as RpfResourceFileEntry;
-            if (resentry == null)
+            RpfResourceFileEntry reSentry = entry as RpfResourceFileEntry;
+            if (reSentry == null)
             {
                 throw new Exception("File entry wasn't a resource! (is it binary data?)");
             }
@@ -39,7 +39,7 @@ namespace CodeWalker.GameFiles
             ResourceDataReader rd = null;
             try
             {
-                rd = new ResourceDataReader(resentry, data);
+                rd = new ResourceDataReader(reSentry, data);
             }
             catch (Exception ex)
             {

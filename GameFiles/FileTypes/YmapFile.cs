@@ -88,15 +88,15 @@ namespace CodeWalker.GameFiles
             Name = entry.Name;
             RpfFileEntry = entry;
 
-            RpfResourceFileEntry resentry = entry as RpfResourceFileEntry;
-            if (resentry == null)
+            RpfResourceFileEntry reSentry = entry as RpfResourceFileEntry;
+            if (reSentry == null)
             {
                 NonMetaLoad(data);
                 Loaded = true;
                 return;
             }
 
-            ResourceDataReader rd = new ResourceDataReader(resentry, data);
+            ResourceDataReader rd = new ResourceDataReader(reSentry, data);
 
             Meta = rd.ReadBlock<Meta>();//maybe null this after load to reduce memory consumption?
 
@@ -178,7 +178,7 @@ namespace CodeWalker.GameFiles
 
             //MetaTypes.ParseMetaData(Meta);
 
-            //string shortname = resentry.Name.Substring(0, resentry.Name.LastIndexOf('.'));
+            //string shortname = reSentry.Name.Substring(0, reSentry.Name.LastIndexOf('.'));
             //uint namehash = JenkHash.GenHash(shortname);
 
 
@@ -447,7 +447,7 @@ namespace CodeWalker.GameFiles
             CCarGens = MetaTypes.ConvertDataArray<CCarGen>(Meta, MetaName.CCarGen, _CMapData.carGenerators);
             if (CCarGens != null)
             {
-                //string str = MetaTypes.GetTypesInitString(resentry, Meta); //to generate structinfos and enuminfos
+                //string str = MetaTypes.GetTypesInitString(reSentry, Meta); //to generate structinfos and enuminfos
                 CarGenerators = new YmapCarGen[CCarGens.Length];
                 for (int i = 0; i < CCarGens.Length; i++)
                 {

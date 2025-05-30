@@ -83,12 +83,12 @@ namespace CodeWalker.GameFiles
             this.graphicsStream = graphicsStream;
         }
 
-        public ResourceDataReader(RpfResourceFileEntry resentry, byte[] data, Endianess endianess = Endianess.LittleEndian)
+        public ResourceDataReader(RpfResourceFileEntry reSentry, byte[] data, Endianess endianess = Endianess.LittleEndian)
             : base((Stream)null, endianess)
         {
-            FileEntry = resentry;
-            var systemSize = resentry.SystemSize;
-            var graphicsSize = resentry.GraphicsSize;
+            FileEntry = reSentry;
+            var systemSize = reSentry.SystemSize;
+            var graphicsSize = reSentry.GraphicsSize;
 
             //if (data != null)
             //{
